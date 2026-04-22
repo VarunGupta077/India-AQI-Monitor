@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>India AQI Monitor – Real-Time Air Quality Dashboard | BCA Project</title>
+  <meta name="description" content="Real-time Air Quality Index (AQI) dashboard for all 36 Indian States and Union Territories. Live weather, temperature and pollution data. BCA Final Year Major Project." />
+  <meta name="author" content="BCA Final Year Project" />
+  <meta property="og:title" content="India AQI Monitor – Real-Time Air Quality Dashboard" />
+  <meta property="og:description" content="Live AQI, weather and temperature data for all Indian states." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌬️</text></svg>" />
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header id="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon"><i class="fas fa-wind"></i></div>
+        <div class="brand-text">
+          <h1>India AQI Monitor</h1>
+          <span>Real-Time Air Quality Index Dashboard</span>
+        </div>
+      </div>
+
+      <div class="header-meta">
+        <div class="live-badge"><span class="pulse-dot"></span> LIVE</div>
+        <div id="last-updated" class="last-updated">Fetching data…</div>
+        <div class="project-badge">BCA Final Year Project</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== HERO STATS ===== -->
+  <section id="hero-stats" class="hero-stats">
+    <div class="stat-card" id="stat-total">
+      <i class="fas fa-map-marked-alt"></i>
+      <div>
+        <div class="stat-value" id="total-states">36</div>
+        <div class="stat-label">States &amp; UTs Monitored</div>
+      </div>
+    </div>
+    <div class="stat-card" id="stat-good">
+      <i class="fas fa-smile" style="color:#22c55e"></i>
+      <div>
+        <div class="stat-value" id="count-good">–</div>
+        <div class="stat-label">Good AQI Regions</div>
+      </div>
+    </div>
+    <div class="stat-card" id="stat-moderate">
+      <i class="fas fa-meh" style="color:#eab308"></i>
+      <div>
+        <div class="stat-value" id="count-moderate">–</div>
+        <div class="stat-label">Moderate Regions</div>
+      </div>
+    </div>
+    <div class="stat-card" id="stat-unhealthy">
+      <i class="fas fa-frown" style="color:#ef4444"></i>
+      <div>
+        <div class="stat-value" id="count-unhealthy">–</div>
+        <div class="stat-label">Unhealthy Regions</div>
+      </div>
+    </div>
+    <div class="stat-card" id="stat-avg">
+      <i class="fas fa-chart-line" style="color:#6366f1"></i>
+      <div>
+        <div class="stat-value" id="avg-aqi">–</div>
+        <div class="stat-label">National Avg AQI</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main id="main-content">
+
+    <!-- ===== CONTROLS BAR ===== -->
+    <section id="controls-bar" class="controls-bar">
+      <div class="search-wrap">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="search-input" placeholder="Search state or city…" autocomplete="off" />
+        <button id="clear-search" class="clear-btn" title="Clear"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="filter-wrap">
+        <label>Filter by AQI:</label>
+        <select id="aqi-filter">
+          <option value="all">All Levels</option>
+          <option value="good">Good (0–50)</option>
+          <option value="satisfactory">Satisfactory (51–100)</option>
+          <option value="moderate">Moderate (101–200)</option>
+          <option value="poor">Poor (201–300)</option>
+          <option value="very-poor">Very Poor (301–400)</option>
+          <option value="severe">Severe (401+)</option>
+        </select>
+      </div>
+
+      <div class="sort-wrap">
+        <label>Sort by:</label>
+        <select id="sort-select">
+          <option value="state">State Name</option>
+          <option value="aqi-asc">AQI: Low → High</option>
+          <option value="aqi-desc">AQI: High → Low</option>
+          <option value="temp">Temperature</option>
+        </select>
+      </div>
+
+      <div class="view-wrap">
+        <button id="view-grid" class="view-btn active" title="Grid view"><i class="fas fa-th-large"></i></button>
+        <button id="view-list" class="view-btn" title="List view"><i class="fas fa-list"></i></button>
+      </div>
+
+      <button id="refresh-btn" class="refresh-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
+    </section>
+
+    <!-- ===== AQI LEGEND ===== -->
+    <section id="aqi-legend" class="aqi-legend">
+      <span class="legend-title"><i class="fas fa-info-circle"></i> AQI Scale:</span>
+      <span class="legend-item good">■ Good (0–50)</span>
+      <span class="legend-item satisfactory">■ Satisfactory (51–100)</span>
+      <span class="legend-item moderate">■ Moderate (101–200)</span>
+      <span class="legend-item poor">■ Poor (201–300)</span>
+      <span class="legend-item very-poor">■ Very Poor (301–400)</span>
+      <span class="legend-item severe">■ Severe (401+)</span>
+    </section>
+
+    <!-- ===== LOADING SPINNER ===== -->
+    <div id="loading-overlay" class="loading-overlay">
+      <div class="spinner-wrap">
+        <div class="spinner"></div>
+        <p>Fetching live AQI &amp; weather data…</p>
+        <small>Connecting to OpenWeatherMap API</small>
+      </div>
+    </div>
+
+    <!-- ===== ERROR MESSAGE ===== -->
+    <div id="error-msg" class="error-msg hidden">
+      <i class="fas fa-exclamation-triangle"></i>
+      <div>
+        <strong>Could not load live data.</strong>
+        <p id="error-detail">Showing demo data instead. Please add a valid OpenWeatherMap API key in <code>js/config.js</code>.</p>
+      </div>
+      <button onclick="document.getElementById('error-msg').classList.add('hidden')"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- ===== STATES GRID ===== -->
+    <section id="states-grid" class="states-grid"></section>
+
+    <!-- ===== NO RESULTS ===== -->
+    <div id="no-results" class="no-results hidden">
+      <i class="fas fa-search"></i>
+      <p>No states found matching your criteria.</p>
+      <button onclick="resetFilters()">Reset Filters</button>
+    </div>
+
+    <!-- ===== CHARTS SECTION ===== -->
+    <section id="charts-section" class="charts-section">
+      <h2 class="section-title"><i class="fas fa-chart-bar"></i> AQI Analytics &amp; Trends</h2>
+
+      <div class="charts-grid">
+
+        <div class="chart-card wide">
+          <div class="chart-header">
+            <h3>Top 15 Most Polluted States</h3>
+            <span class="chart-subtitle">AQI ranking by current readings</span>
+          </div>
+          <div class="chart-wrap" style="height:340px;">
+            <canvas id="bar-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>AQI Category Distribution</h3>
+            <span class="chart-subtitle">Percentage of states per category</span>
+          </div>
+          <div class="chart-wrap" style="height:280px;">
+            <canvas id="pie-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Temperature Distribution</h3>
+            <span class="chart-subtitle">°C across Indian states</span>
+          </div>
+          <div class="chart-wrap" style="height:280px;">
+            <canvas id="temp-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card wide">
+          <div class="chart-header">
+            <h3>AQI vs Temperature Correlation</h3>
+            <span class="chart-subtitle">Scatter plot: AQI vs temperature (°C)</span>
+          </div>
+          <div class="chart-wrap" style="height:300px;">
+            <canvas id="scatter-chart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== AQI INFO SECTION ===== -->
+    <section id="info-section" class="info-section">
+      <h2 class="section-title"><i class="fas fa-book-open"></i> Understanding AQI</h2>
+      <div class="info-grid">
+        <div class="info-card good-bg">
+          <div class="info-aqi-range">0 – 50</div>
+          <h4>Good</h4>
+          <p>Air quality is satisfactory. Little or no risk to health.</p>
+          <div class="health-icon"><i class="fas fa-running"></i></div>
+        </div>
+        <div class="info-card satisfactory-bg">
+          <div class="info-aqi-range">51 – 100</div>
+          <h4>Satisfactory</h4>
+          <p>Acceptable air quality. Minor concern for sensitive groups.</p>
+          <div class="health-icon"><i class="fas fa-walking"></i></div>
+        </div>
+        <div class="info-card moderate-bg">
+          <div class="info-aqi-range">101 – 200</div>
+          <h4>Moderate</h4>
+          <p>Sensitive individuals may experience health effects.</p>
+          <div class="health-icon"><i class="fas fa-user-shield"></i></div>
+        </div>
+        <div class="info-card poor-bg">
+          <div class="info-aqi-range">201 – 300</div>
+          <h4>Poor</h4>
+          <p>Health effects for everyone; serious effects for sensitive groups.</p>
+          <div class="health-icon"><i class="fas fa-mask"></i></div>
+        </div>
+        <div class="info-card very-poor-bg">
+          <div class="info-aqi-range">301 – 400</div>
+          <h4>Very Poor</h4>
+          <p>Health alert: everyone may experience serious effects.</p>
+          <div class="health-icon"><i class="fas fa-head-side-mask"></i></div>
+        </div>
+        <div class="info-card severe-bg">
+          <div class="info-aqi-range">401+</div>
+          <h4>Severe</h4>
+          <p>Emergency conditions. Entire population likely affected.</p>
+          <div class="health-icon"><i class="fas fa-hospital"></i></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== STATE DETAIL MODAL ===== -->
+  <div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal(event)">
+    <div class="modal-box" id="modal-box">
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer id="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <p><i class="fas fa-graduation-cap"></i> BCA Final Year Major Project</p>
+        <p>👨‍💻Created By Varun Gupta </p>
+      </div>
+      <div class="footer-center">
+        <p>Data sourced from <strong>OpenWeatherMap API</strong> &amp; <strong>WAQI (World Air Quality Index)</strong></p>
+        <p>Updated every 10 minutes automatically</p>
+      </div>
+      <div class="footer-right">
+        <p><i class="fas fa-code"></i> HTML CSS &amp; JavaScript</p>
+        <p><i class="fas fa-chart-bar"></i> Powered by Chart.js</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scroll-to-top -->
+  <button id="scroll-top" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
