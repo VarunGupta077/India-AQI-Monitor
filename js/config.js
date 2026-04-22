@@ -13,10 +13,10 @@
 
 const CONFIG = {
   // OpenWeatherMap API (free tier: https://openweathermap.org/api)
-  OWM_API_KEY: 'd69ceea71b687a8944ab543bde622c57',
+  OWM_API_KEY: '',
 
   // WAQI (World Air Quality Index) token (free: https://aqicn.org/data-platform/token/)
-  WAQI_TOKEN: '3761e4c2da2536978b47245cbec3003b6a3b778b',
+  WAQI_TOKEN: '',
 
   // Auto-refresh interval (ms) – 10 minutes
   REFRESH_INTERVAL: 10 * 60 * 1000,
