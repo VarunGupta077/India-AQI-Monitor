@@ -76,5 +76,5 @@ async function fetchAQI(state) {
   const res = await fetch(`/.netlify/functions/aqi?lat=${state.lat}&lon=${state.lon}`); 
   if (!res.ok) throw new Error(`AQI API ${res.status}`);
   const json = await res.json();
-  return parseInt(json.data.aqi, 10); // this line same
+  return parseInt(json.aqi, 10); // this line same
 }
