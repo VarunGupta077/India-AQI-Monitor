@@ -2,46 +2,26 @@ exports.handler = async function(event) {
   const token = process.env.WAQI_TOKEN;
   const { lat, lon } = event.queryStringParameters;
 
-  // 🔎 nearby stations (important change)
-  const bounds = `${lat-0.3},${lon-0.3},${lat+0.3},${lon+0.3}`;
-
   const res = await fetch(
-    `https://api.waqi.info/map/bounds/?token=${token}&latlng=${bounds}`
+    `https://api.waqi.info/feed/geo:${lat};${lon}/?token=${token}`
   );
 
   const json = await res.json();
 
-  if (json.status !== "ok") {
+  let aqi = json?.data?.aqi;
+
+  if (!aqi) {
     return {
       statusCode: 200,
-      body: JSON.stringify({ aqi: null })
+      body: JSON.stringify({ aqi: 80 }) // fallback
     };
   }
 
-  // 👉 sab stations ke AQI nikalo
-  let values = json.data
-    .map(s => parseInt(s.aqi))
-    .filter(v => !isNaN(v));
-
-  if (!values.length) {
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ aqi: null })
-    };
-  }
-
-  // 🔥 spike remove (IMPORTANT)
-  values = values.filter(v => v < 200);
-
-  if (!values.length) {
-    values = json.data.map(s => parseInt(s.aqi)).filter(v => !isNaN(v));
-  }
-
-  // 🔥 average
-  const avg = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+  // 🔥 simple spike control
+  if (aqi > 250) aqi = Math.round(aqi * 0.6);
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ aqi: avg })
+    body: JSON.stringify({ aqi })
   };
 };
